@@ -4,9 +4,8 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: './', // Ensures relative paths for assets, critical for GitHub Pages
+  // Zeabur and Vercel handle root paths automatically, removing base: './'
   define: {
-    // Polyfill process.env to prevent runtime crashes if code accesses it
     'process.env': {}
   },
   build: {

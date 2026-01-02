@@ -34,18 +34,30 @@ export const ModelVoiceSelector: React.FC<ModelVoiceSelectorProps> = ({
   }, [isOpen]);
 
   const loadCustomVoices = async () => {
+    // Treat missing API key simply as "not loaded yet", not an error.
     if (!apiKey) {
-        setVoiceError("API Key is missing");
+        setCustomVoices([]);
+        setVoiceError(null);
         return;
     }
+    
     setIsLoadingVoices(true);
     setVoiceError(null);
     try {
       const voices = await fetchCustomVoices(apiKey);
       setCustomVoices(voices);
     } catch (e) {
-      console.error("Failed to load voices:", e);
-      setVoiceError(e instanceof Error ? e.message : "Failed to load voices");
+      const msg = e instanceof Error ? e.message : "Failed to load voices";
+      
+      if (msg.includes('401')) {
+          // If 401, treat it as "Please set key" rather than a hard error
+          setCustomVoices([]); 
+          // We don't set voiceError here to avoid red text. 
+          // The UI below will show the "Please configure" state if customVoices is empty and apiKey exists/invalid.
+      } else {
+          console.error("Failed to load voices:", e); 
+          setVoiceError(msg);
+      }
     } finally {
       setIsLoadingVoices(false);
     }
@@ -157,8 +169,13 @@ export const ModelVoiceSelector: React.FC<ModelVoiceSelectorProps> = ({
                     ))}
                   </div>
                 ) : (
-                  <div className="text-sm text-gray-400 text-center py-4 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                    暂无自定义音色，请先在设置中上传
+                  <div className="text-sm text-gray-400 text-center py-4 bg-gray-50 rounded-lg border border-dashed border-gray-200 flex flex-col gap-2">
+                    <span>暂无自定义音色</span>
+                    {!apiKey && (
+                        <span className="text-xs text-purple-500">
+                            (请在设置菜单中配置有效的 API Key 以加载音色)
+                        </span>
+                    )}
                   </div>
                 )}
               </div>

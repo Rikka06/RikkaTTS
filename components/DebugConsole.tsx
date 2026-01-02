@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Terminal, ChevronDown, ChevronUp, Trash2, AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { Terminal, ChevronDown, ChevronUp, Trash2, AlertCircle, CheckCircle, Info, AlertTriangle } from 'lucide-react';
 
 export interface LogEntry {
   id: string;
   timestamp: string;
   message: string;
-  type: 'info' | 'error' | 'success';
+  type: 'info' | 'error' | 'success' | 'warning';
 }
 
 interface DebugConsoleProps {
@@ -45,6 +45,7 @@ export const DebugConsole: React.FC<DebugConsoleProps> = ({ logs, onClear }) => 
           {logs.length > 0 && !isOpen && (
             <span className={`truncate max-w-[300px] flex items-center gap-1 ${
                 logs[0].type === 'error' ? 'text-red-400' : 
+                logs[0].type === 'warning' ? 'text-amber-400' :
                 logs[0].type === 'success' ? 'text-green-400' : 'text-slate-400'
             }`}>
               <span className="opacity-50">Last:</span> {logs[0].message}
@@ -71,10 +72,12 @@ export const DebugConsole: React.FC<DebugConsoleProps> = ({ logs, onClear }) => 
           {logs.slice().reverse().map((log) => (
             <div key={log.id} className={`flex gap-2 leading-relaxed border-b border-white/5 pb-1 ${
                 log.type === 'error' ? 'text-red-400' : 
+                log.type === 'warning' ? 'text-amber-400' :
                 log.type === 'success' ? 'text-green-400' : 'text-slate-300'
             }`}>
               <div className="shrink-0 pt-0.5 opacity-70">
                  {log.type === 'error' ? <AlertCircle className="w-3 h-3" /> :
+                  log.type === 'warning' ? <AlertTriangle className="w-3 h-3" /> :
                   log.type === 'success' ? <CheckCircle className="w-3 h-3" /> :
                   <Info className="w-3 h-3" />}
               </div>

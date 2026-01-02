@@ -19,3 +19,23 @@ export const blobToBase64 = (blob: Blob): Promise<string> => {
     reader.readAsDataURL(blob);
   });
 };
+
+// Calculate UTF-8 byte size
+export const getByteLength = (str: string): number => {
+  return new TextEncoder().encode(str).length;
+};
+
+// Calculate cost: 50 CNY per 1 Million bytes
+// Formula: (bytes / 1,000,000) * 50
+export const calculateCost = (text: string): number => {
+  const bytes = getByteLength(text);
+  const cost = (bytes / 1000000) * 50;
+  return cost;
+};
+
+export const formatCost = (cost: number): string => {
+  // If cost is very small, show more decimals, otherwise 4 is enough for most short texts
+  if (cost === 0) return '¥0.00';
+  if (cost < 0.01) return `¥${cost.toFixed(6)}`;
+  return `¥${cost.toFixed(4)}`;
+};

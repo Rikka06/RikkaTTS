@@ -1,65 +1,75 @@
-# SiliconFlow TTS Client
+# 👁️ Rikka-TTS (邪王真眼·语音共鸣装置) v2.0
 
-A modern, responsive Text-to-Speech client for SiliconFlow APIs, built with React, TypeScript, and Vite.
+> “爆裂吧，现实！粉碎吧，精神！放逐这个世界！—— 此乃连接不可视境界线之终端。”
 
-## Features
+![Status](https://img.shields.io/badge/Status-Fully%20Operational-purple.svg) ![Mana](https://img.shields.io/badge/Mana-SiliconFlow-blue.svg) ![Deploy](https://img.shields.io/badge/Deploy-Zeabur-000000.svg)
 
-- **High-Quality TTS**: Support for models like IndexTTS and CosyVoice.
-- **Voice Cloning**: Upload reference audio to create custom voices.
-- **Audio Management**: Waveform-style player with download support.
-- **Persistency**: History and settings saved locally.
-- **Mobile First**: Optimized UI for both desktop and mobile devices.
+## 🔮 契约书 (简介)
 
-## 🚀 Getting Started
+凡人啊，欢迎来到 **Rikka-TTS 2.0**。这不仅仅是一个基于 React 和 SiliconFlow API 构建的语音合成客户端，它是**邪王真眼 (Wicked Eye)** 用来将精神能量转化为声波的魔导具。
 
-### 1. Installation
+通过此装置，你可以跨越维度的限制，将枯燥的文字转化为拥有灵魂的 **“声音 (Voice)”**。
 
-Clone the repository and install dependencies:
+## 📜 魔导书功能 (Features)
+
+*   **咏唱具现化 (High-Quality TTS)**: 支持 IndexTTS, CosyVoice, Moss 等多种术式。
+*   **等价交换 (Cost Calculation)**: 实时计算魔力消耗（计费标准：50元/1M bytes），让你精确掌控因果律的代价。
+*   **灵魂复刻 (Voice Cloning)**: 献祭一段参考音频，即可创造出独一无二的灵魂分身。
+*   **时空回溯 (Persistent History)**: 所有的咏唱记录和费用明细都会被铭刻在本地。
+*   **幻影界面 (Glassmorphism)**: 采用最新的视网膜投影技术（UI Design），呈现精致的半透明质感。
+
+## 🕯️ 召唤仪式 (Installation & Setup)
+
+### 1. 构筑法阵 (Install Dependencies)
 
 ```bash
+git clone https://github.com/your-username/rikka-tts-client.git
+cd rikka-tts-client
 npm install
 ```
 
-### 2. Development
-
-Start the local development server:
+### 2. 开启虚数空间 (Development)
 
 ```bash
 npm run dev
 ```
 
-### 3. Build
-
-Build for production:
+### 3. 固化现实 (Build)
 
 ```bash
 npm run build
 ```
 
-## 🌐 Deploy to GitHub Pages
+## 🌌 开启世界之门 (Deploy to Zeabur)
 
-This project is pre-configured for one-command deployment to GitHub Pages.
+本装置已针对 **Zeabur** 容器化网络进行了优化。
 
-1. Ensure your project is pushed to a GitHub repository.
-2. Run the deployment script:
+1. 登录 [Zeabur Dashboard](https://zeabur.com).
+2. 创建新项目。
+3. 选择 **Deploy New Service** -> **Git**.
+4. 选中本仓库。
+5. Zeabur 会自动识别 Vite 框架并执行构建。
+   * *Networking 设置*: 开启 Public Domain 即可访问。
 
-```bash
-npm run deploy
-```
+无需复杂的 `gh-pages` 仪式，Zeabur 会自动处理一切。
 
-This command will:
-1. Build the project (`npm run build`).
-2. Push the `dist` folder to a `gh-pages` branch on your repository.
+## 🗝️ 祭品 (Configuration)
 
-**Note**: Make sure to go to your GitHub Repository Settings -> Pages, and ensure the source is set to the `gh-pages` branch.
+为了驱动此装置，你需要向 **SiliconFlow (硅基流动)** 献上祭品以获取 **API Key**。
 
-## 🔑 Configuration
+1. 点击右上角的 **汉堡菜单 (Menu)**。
+2. 输入 API Key。
+3. 密钥将被安全地封印在 LocalStorage 中。
 
-To use the TTS features, you need a SiliconFlow API Key.
-- Click the Menu icon in the top right.
-- Enter your API Key.
-- The key is stored safely in your browser's LocalStorage.
+## 💰 计费说明
 
-## License
+*   **费率**: ¥50.00 CNY / 1,000,000 Bytes (UTF-8)
+*   系统会根据输入文本的 UTF-8 字节长度自动计算，并显示在输入框上方和生成历史中。
+
+## 🛡️ 许可证 (License)
 
 MIT
+
+---
+
+> “The Dark Flame Master 已确认为此仓库的协力者。”

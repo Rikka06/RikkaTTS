@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Upload, List, Copy, Trash2, Key, ChevronLeft, RefreshCw, Wand2, Loader2, AlertTriangle } from 'lucide-react';
+import { X, Upload, List, Copy, Trash2, Key, ChevronLeft, RefreshCw, Wand2, Loader2, AlertTriangle, Terminal } from 'lucide-react';
 import { uploadCustomVoice, fetchCustomVoices, deleteCustomVoice, transcribeAudio } from '../services/geminiService';
 import { TTS_MODELS, TTSModelId, Voice } from '../types';
 
@@ -8,10 +8,12 @@ interface SettingsMenuProps {
   onClose: () => void;
   apiKey: string;
   setApiKey: (key: string) => void;
-  onLog: (message: string, type: 'info' | 'error' | 'success') => void;
+  onLog: (message: string, type: 'info' | 'error' | 'success' | 'warning') => void;
+  showConsole: boolean;
+  setShowConsole: (show: boolean) => void;
 }
 
-export const SettingsMenu: React.FC<SettingsMenuProps> = ({ isOpen, onClose, apiKey, setApiKey, onLog }) => {
+export const SettingsMenu: React.FC<SettingsMenuProps> = ({ isOpen, onClose, apiKey, setApiKey, onLog, showConsole, setShowConsole }) => {
   const [view, setView] = useState<'main' | 'upload' | 'list'>('main');
   const [loading, setLoading] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
@@ -155,9 +157,14 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ isOpen, onClose, api
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    onLog('Copied ID to clipboard!', 'info');
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      onLog('Copied ID to clipboard!', 'info');
+    } catch (err) {
+      console.error('Clipboard failed', err);
+      onLog('Clipboard access failed. Please copy manually.', 'error');
+    }
   };
 
   if (!isOpen) return null;
@@ -192,20 +199,35 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ isOpen, onClose, api
           
           {view === 'main' && (
             <div className="space-y-8">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-600 flex items-center gap-2">
-                  <Key className="w-4 h-4" /> API Key
-                </label>
-                <input 
-                  type="text" 
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="sk-..."
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-purple-400 outline-none text-sm font-mono text-gray-700 transition-all bg-gray-50"
-                />
-                <p className="text-xs text-gray-400">
-                  Required for accessing SiliconFlow API services.
-                </p>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-600 flex items-center gap-2">
+                    <Key className="w-4 h-4" /> API Key
+                  </label>
+                  <input 
+                    type="text" 
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder="sk-..."
+                    className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-purple-400 outline-none text-sm font-mono text-gray-700 transition-all bg-gray-50"
+                  />
+                  <p className="text-xs text-gray-400">
+                    Required for accessing SiliconFlow API services.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="flex items-center gap-2">
+                     <Terminal className="w-4 h-4 text-gray-500" />
+                     <span className="text-sm font-medium text-gray-700">调试控制台 (Debug Console)</span>
+                  </div>
+                  <button 
+                    onClick={() => setShowConsole(!showConsole)}
+                    className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${showConsole ? 'bg-purple-600' : 'bg-gray-300'}`}
+                  >
+                    <div className={`bg-white w-4 h-4 rounded-full shadow-md transform duration-300 ${showConsole ? 'translate-x-5' : ''}`}></div>
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 h-32">

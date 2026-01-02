@@ -1,8 +1,10 @@
+
 export interface AudioMessage {
   id: string;
   text: string;
   audioUrl: string; // Blob URL
   createdAt: number;
+  cost?: number; // Cost in CNY
 }
 
 export const TTS_MODELS = [

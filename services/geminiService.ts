@@ -31,8 +31,6 @@ const parseResponseError = async (response: Response, context: string): Promise<
 };
 
 export const fetchCustomVoices = async (apiKey?: string): Promise<Voice[]> => {
-  console.log("Fetching custom voices from:", `${BASE_URL}/audio/voice/list`);
-  
   const response = await fetch(`${BASE_URL}/audio/voice/list`, {
     method: 'GET',
     headers: {
@@ -46,9 +44,7 @@ export const fetchCustomVoices = async (apiKey?: string): Promise<Voice[]> => {
   }
 
   const data = await response.json();
-  console.log("Raw voice list data:", data);
 
-  // Reference implementation checks data.result OR data.results
   let list: any[] = [];
   if (data.result && Array.isArray(data.result)) {
     list = data.result;
@@ -121,7 +117,6 @@ export const uploadCustomVoice = async (
      throw await parseResponseError(response, "Upload");
   }
 
-  // Handle successful 200 responses that might contain error codes (logic seen in reference)
   const responseText = await response.text();
   let data;
   try {
@@ -130,7 +125,6 @@ export const uploadCustomVoice = async (
     throw new Error(`Invalid server response: ${responseText.substring(0, 100)}`);
   }
 
-  // Double check logical errors in 200 OK responses
   if (data.code && data.code !== 0 && data.code !== 200) {
      throw new Error(data.message || `Upload failed with code ${data.code}`);
   }
@@ -144,14 +138,9 @@ export const uploadCustomVoice = async (
   };
 };
 
-/**
- * SiliconFlow Delete Reference Voice Implementation
- * Adapted from provided snippet to work with the app's error handling.
- */
 export const deleteCustomVoice = async (uri: string, apiKey?: string): Promise<string> => {
   const url = 'https://api.siliconflow.cn/v1/audio/voice/deletions';
   
-  // Payload structure as requested
   const payload = {
       uri: uri
   };
@@ -168,13 +157,10 @@ export const deleteCustomVoice = async (uri: string, apiKey?: string): Promise<s
           body: JSON.stringify(payload)
       });
 
-      // Check response status
       if (response.ok) {
           const result = await response.text();
-          console.log('删除成功:', result);
           return result;
       } else {
-          // Catch json parse error if body is empty or not json, defaulting to empty obj
           const errorData = await response.json().catch(() => ({})); 
           console.error('删除失败:', response.status, errorData);
           throw new Error(errorData.message || '未知错误');
@@ -188,10 +174,32 @@ export const deleteCustomVoice = async (uri: string, apiKey?: string): Promise<s
 export const generateSpeech = async (text: string, model: TTSModelId, voice: Voice, apiKey?: string): Promise<string> => {
   if (!text || !text.trim()) throw new Error("Text is required");
 
-  let voiceParam = voice.id;
+  // Removed incompatibility check for IndexTTS + Custom Voice based on user feedback.
   
-  if (voice.type === 'system') {
-    voiceParam = `${model}:${voice.id}`;
+  const body: any = {
+    model: model,
+    input: text,
+    response_format: 'mp3',
+    stream: false 
+  };
+
+  // Logic matched to reference implementation:
+  // 1. If voice is custom, use the ID directly.
+  // 2. If voice is system (preset), use "model:voice" format, unless it's default/empty.
+  
+  if (voice.type === 'custom') {
+      if (voice.id) {
+          body.voice = voice.id;
+      }
+  } else {
+      // System voices
+      // In the reference code: if (voice !== 'default') requestData.voice = `${model}:${voice}`;
+      // Our voice.id for system voices is like 'alex', 'anna', etc.
+      // We assume 'default' maps to an empty voice param or specific logic, but here we treat known system voices as non-default.
+      if (voice.id && voice.id !== 'default') {
+          // Applies to CosyVoice, IndexTTS (if supported), Moss, etc.
+          body.voice = `${model}:${voice.id}`;
+      }
   }
 
   const options = {
@@ -200,13 +208,7 @@ export const generateSpeech = async (text: string, model: TTSModelId, voice: Voi
       ...getHeaders(apiKey),
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      model: model,
-      input: text,
-      voice: voiceParam, 
-      response_format: 'mp3',
-      stream: false // Explicitly disable stream as per reference
-    })
+    body: JSON.stringify(body)
   };
 
   try {
@@ -221,6 +223,10 @@ export const generateSpeech = async (text: string, model: TTSModelId, voice: Voi
 
   } catch (error) {
     console.error("Error generating speech:", error);
+    // Enhance error message for the user if it's the known 50507 code
+    if (error instanceof Error && error.message.includes('50507')) {
+       throw new Error(`Generation failed (50507): The selected voice '${voice.name}' (${voice.id}) appears incompatible with model '${model}'. Try checking if this voice is supported by the model.`);
+    }
     throw error;
   }
 };
