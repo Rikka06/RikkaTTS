@@ -8,63 +8,65 @@
 
 凡人啊，欢迎来到 **Rikka-TTS 2.0**。这不仅仅是一个基于 React 和 SiliconFlow API 构建的语音合成客户端，它是**邪王真眼 (Wicked Eye)** 用来将精神能量转化为声波的魔导具。
 
-通过此装置，你可以跨越维度的限制，将枯燥的文字转化为拥有灵魂的 **“声音 (Voice)”**。
+通过此装置，你可以跨越维度的限制，将枯燥的文字转化为拥有灵魂的 **“声音 (Voice)”**，并观测声音的形态。
 
 ## 📜 魔导书功能 (Features)
 
-*   **咏唱具现化 (High-Quality TTS)**: 支持 IndexTTS, CosyVoice, Moss 等多种术式。
-*   **等价交换 (Cost Calculation)**: 实时计算魔力消耗（计费标准：50元/1M bytes），让你精确掌控因果律的代价。
-*   **灵魂复刻 (Voice Cloning)**: 献祭一段参考音频，即可创造出独一无二的灵魂分身。
-*   **时空回溯 (Persistent History)**: 所有的咏唱记录和费用明细都会被铭刻在本地。
-*   **幻影界面 (Glassmorphism)**: 采用最新的视网膜投影技术（UI Design），呈现精致的半透明质感。
+### 核心机能
+*   **咏唱具现化 (High-Quality TTS)**: 支持 `IndexTTS` (推荐), `CosyVoice`, `Moss` 等多种顶级术式。
+*   **灵魂复刻 & 萃取 (Voice Cloning & Extraction)**: 
+    *   支持上传音频文件复刻音色。
+    *   **New!** 支持直接上传视频文件 (.mp4, .mov)，系统会自动提取音轨作为参考音频。
+*   **咏唱连锁 (Chain Casting)**: 开启自动连播模式，像听有声书一样连续播放生成的片段。
+*   **视界共鸣 (Visualizer)**: 播放音频时，界面会随声波频率产生紫色的魔力共鸣（动态频谱）。
 
-## 🕯️ 召唤仪式 (Installation & Setup)
+### 辅助系统
+*   **等价交换 (Cost Calc)**: 实时计算魔力消耗（¥50/1M bytes），精确掌控因果律代价。
+*   **时空回溯 (History)**: 所有的生成记录都会被铭刻在本地 LocalStorage，防爆仓机制自动管理存储空间。
+*   **真理之书 (Grimoire)**: 随机生成中二病台词，用于快速测试音色效果。
+*   **自动分段 (Auto Split)**: 支持将长文本按换行符自动切分为多个任务并行或串行生成。
 
-### 1. 构筑法阵 (Install Dependencies)
+## 🕹️ 操作指南 (How to Use)
 
-```bash
-git clone https://github.com/your-username/rikka-tts-client.git
-cd rikka-tts-client
-npm install
-```
+### 1. 建立契约 (Setup API)
+点击右上角的 **汉堡菜单** -> **设置 & 管理**，输入你的 SiliconFlow API Key。密钥仅保存在你的浏览器本地，不会上传至任何第三方服务器。
 
-### 2. 开启虚数空间 (Development)
+### 2. 灵魂复刻 (Create Voice)
+如果你想使用特定的声音：
+1. 打开 **设置** -> **上传素材 / 创建音色**。
+2. 上传一段 5-10 秒的音频，**或者直接上传一个视频文件**（系统会自动提取音频）。
+3. 点击“自动识别文本”获取参考文本。
+4. 命名并上传。
 
-```bash
-npm run dev
-```
+### 3. 开始咏唱 (Generate)
+1. 在主界面底部输入框输入文字（或点击“书本”图标随机生成）。
+2. 点击中间的胶囊按钮选择 **模型** 和 **音色**。
+3. 点击 **生成**。
 
-### 3. 固化现实 (Build)
-
-```bash
-npm run build
-```
+### 4. 观测与连锁 (Play & Chain)
+*   点击播放按钮收听，观察底部的紫色能量波动。
+*   点击顶部工具栏的 **循环图标** 开启“咏唱连锁”，当前片段播放完毕后将自动播放下一条。
 
 ## 🌌 开启世界之门 (Deploy to Zeabur)
 
-本装置已针对 **Zeabur** 容器化网络进行了优化。
+本装置已针对 **Zeabur** 进行了深度适配，无需任何复杂的 Docker 配置或构建命令，**直接拉取仓库即可部署**。
 
-1. 登录 [Zeabur Dashboard](https://zeabur.com).
-2. 创建新项目。
-3. 选择 **Deploy New Service** -> **Git**.
-4. 选中本仓库。
-5. Zeabur 会自动识别 Vite 框架并执行构建。
-   * *Networking 设置*: 开启 Public Domain 即可访问。
+### 部署步骤：
 
-无需复杂的 `gh-pages` 仪式，Zeabur 会自动处理一切。
+1. **Fork 本仓库** 到你的 GitHub 账号。
+2. 登录 [Zeabur Dashboard](https://zeabur.com).
+3. 点击 **Create Project** (创建项目)。
+4. 点击 **Deploy New Service** (部署新服务) -> 选择 **Git**。
+5. 在列表中选中你刚刚 Fork 的 `rikka-tts-client` 仓库。
+6. 点击部署。
+   * Zeabur 会自动识别这是一个 Vite/React 项目并开始构建。
+7. 等待构建完成后，在 **Networking** (网络) 选项卡中点击 **Generate Domain** (生成域名) 或绑定你自己的域名。
+8. 访问域名，开始咏唱！
 
-## 🗝️ 祭品 (Configuration)
-
-为了驱动此装置，你需要向 **SiliconFlow (硅基流动)** 献上祭品以获取 **API Key**。
-
-1. 点击右上角的 **汉堡菜单 (Menu)**。
-2. 输入 API Key。
-3. 密钥将被安全地封印在 LocalStorage 中。
-
-## 💰 计费说明
+## 💰 计费说明 (Billing)
 
 *   **费率**: ¥50.00 CNY / 1,000,000 Bytes (UTF-8)
-*   系统会根据输入文本的 UTF-8 字节长度自动计算，并显示在输入框上方和生成历史中。
+*   *注：本客户端仅作为连接器，实际费用产生于你的 SiliconFlow 账户。*
 
 ## 🛡️ 许可证 (License)
 
