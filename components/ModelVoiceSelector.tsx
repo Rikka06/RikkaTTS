@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, Box, RefreshCw } from 'lucide-react';
+import { X, Check, Box, RefreshCw, Upload, Edit3, Trash2, CheckCircle, Quote, Loader2 } from 'lucide-react';
 import { TTS_MODELS, TTSModelId, Voice } from '../types';
-import { fetchCustomVoices } from '../services/geminiService';
+import { fetchCustomVoices, deleteCustomVoice } from '../services/geminiService';
 
 interface ModelVoiceSelectorProps {
   isOpen: boolean;
@@ -11,7 +11,10 @@ interface ModelVoiceSelectorProps {
   onSelectModel: (model: TTSModelId) => void;
   onSelectVoice: (voice: Voice) => void;
   apiKey: string;
+  onOpenSettings: (view: 'upload') => void;
 }
+
+const NICKNAME_STORAGE_KEY = 'SILICONFLOW_VOICE_NICKNAMES';
 
 export const ModelVoiceSelector: React.FC<ModelVoiceSelectorProps> = ({
   isOpen,
@@ -21,21 +24,39 @@ export const ModelVoiceSelector: React.FC<ModelVoiceSelectorProps> = ({
   onSelectModel,
   onSelectVoice,
   apiKey,
+  onOpenSettings
 }) => {
-  const [activeTab, setActiveTab] = useState<'model' | 'voice'>('model');
+  const [activeTab, setActiveTab] = useState<'model' | 'voice'>('voice');
   const [customVoices, setCustomVoices] = useState<Voice[]>([]);
   const [isLoadingVoices, setIsLoadingVoices] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  
+  // Nicknames management
+  const [nicknames, setNicknames] = useState<Record<string, string>>({});
+  
+  // UI State for Actions
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editNameValue, setEditNameValue] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       loadCustomVoices();
+      setActiveTab('voice');
+      // Load nicknames
+      try {
+        const saved = localStorage.getItem(NICKNAME_STORAGE_KEY);
+        if (saved) {
+            setNicknames(JSON.parse(saved));
+        }
+      } catch (e) {
+          console.error("Failed to load nicknames", e);
+      }
     }
   }, [isOpen]);
 
   const loadCustomVoices = async () => {
-    // Treat missing API key simply as "not loaded yet", not an error.
-    if (!apiKey) {
+    if (!apiKey || !apiKey.trim()) {
         setCustomVoices([]);
         setVoiceError(null);
         return;
@@ -48,12 +69,8 @@ export const ModelVoiceSelector: React.FC<ModelVoiceSelectorProps> = ({
       setCustomVoices(voices);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to load voices";
-      
       if (msg.includes('401')) {
-          // If 401, treat it as "Please set key" rather than a hard error
           setCustomVoices([]); 
-          // We don't set voiceError here to avoid red text. 
-          // The UI below will show the "Please configure" state if customVoices is empty and apiKey exists/invalid.
       } else {
           console.error("Failed to load voices:", e); 
           setVoiceError(msg);
@@ -61,6 +78,72 @@ export const ModelVoiceSelector: React.FC<ModelVoiceSelectorProps> = ({
     } finally {
       setIsLoadingVoices(false);
     }
+  };
+
+  const handleSaveNickname = (id: string) => {
+      const newNicknames = { ...nicknames, [id]: editNameValue };
+      setNicknames(newNicknames);
+      localStorage.setItem(NICKNAME_STORAGE_KEY, JSON.stringify(newNicknames));
+      setEditingId(null);
+      
+      // Update currently selected voice if it matches
+      if (currentVoice.id === id) {
+          onSelectVoice({ ...currentVoice, name: editNameValue });
+      }
+  };
+
+  const handleStartEdit = (e: React.MouseEvent, voice: Voice) => {
+      e.stopPropagation();
+      setEditingId(voice.id);
+      setEditNameValue(nicknames[voice.id] || voice.name);
+  };
+
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+      e.stopPropagation();
+      if (deletingId === id) return; 
+      
+      setDeletingId(id);
+      try {
+          await deleteCustomVoice(id, apiKey);
+          setCustomVoices(prev => prev.filter(v => v.id !== id));
+          if (currentVoice.id === id) {
+              onSelectVoice({ id: 'default', name: 'Default', type: 'system' }); // Reset if selected deleted
+          }
+      } catch (e) {
+          alert("删除失败: " + (e instanceof Error ? e.message : "未知错误"));
+      } finally {
+          setDeletingId(null);
+      }
+  };
+
+  const handleCopyId = (e: React.MouseEvent, id: string) => {
+      e.stopPropagation();
+      navigator.clipboard.writeText(id).then(() => {
+          console.log('ID copied to clipboard');
+      }).catch(err => {
+          console.warn('Clipboard API failed, attempting fallback:', err);
+          // Fallback mechanism
+          const textArea = document.createElement("textarea");
+          textArea.value = id;
+          
+          textArea.style.position = "fixed";
+          textArea.style.left = "-9999px";
+          textArea.style.top = "0";
+          document.body.appendChild(textArea);
+          
+          textArea.focus();
+          textArea.select();
+          
+          try {
+              document.execCommand('copy');
+              console.log('ID copied via fallback');
+          } catch (fallbackErr) {
+              console.error('Fallback copy failed', fallbackErr);
+              alert(`Copy failed. ID: ${id}`);
+          }
+          
+          document.body.removeChild(textArea);
+      });
   };
 
   if (!isOpen) return null;
@@ -72,7 +155,7 @@ export const ModelVoiceSelector: React.FC<ModelVoiceSelectorProps> = ({
         onClick={onClose}
       />
       
-      <div className="relative w-full max-w-md md:max-w-xl bg-white rounded-t-2xl shadow-2xl flex flex-col max-h-[85vh] h-[500px] animate-in slide-in-from-bottom duration-300">
+      <div className="relative w-full max-w-md md:max-w-xl bg-white rounded-t-2xl shadow-2xl flex flex-col max-h-[85vh] h-[600px] animate-in slide-in-from-bottom duration-300">
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
           <h3 className="text-lg font-bold text-gray-800">配置选择</h3>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
@@ -81,16 +164,6 @@ export const ModelVoiceSelector: React.FC<ModelVoiceSelectorProps> = ({
         </div>
 
         <div className="flex p-2 gap-2 bg-gray-50 mx-4 mt-4 rounded-lg shrink-0">
-          <button
-            onClick={() => setActiveTab('model')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
-              activeTab === 'model' 
-                ? 'bg-white text-purple-600 shadow-sm' 
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            选择模型
-          </button>
           <button
             onClick={() => setActiveTab('voice')}
             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
@@ -101,9 +174,151 @@ export const ModelVoiceSelector: React.FC<ModelVoiceSelectorProps> = ({
           >
             选择音色
           </button>
+          <button
+            onClick={() => setActiveTab('model')}
+            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+              activeTab === 'model' 
+                ? 'bg-white text-purple-600 shadow-sm' 
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            选择模型
+          </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          
+          {activeTab === 'voice' && (
+            <div className="space-y-6">
+              {/* Only Upload Button */}
+              <button 
+                onClick={() => onOpenSettings('upload')}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-purple-50 text-purple-700 rounded-xl border border-purple-100 text-sm font-medium hover:bg-purple-100 transition-colors"
+              >
+                 <Upload className="w-4 h-4" /> 上传音色 (Create Custom Voice)
+              </button>
+
+              <div>
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">我的音色库</h4>
+                  <button onClick={loadCustomVoices} disabled={isLoadingVoices}>
+                    <RefreshCw className={`w-3.5 h-3.5 text-gray-400 ${isLoadingVoices ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
+                
+                {isLoadingVoices && customVoices.length === 0 ? (
+                  <div className="text-sm text-gray-400 text-center py-4">加载中...</div>
+                ) : voiceError ? (
+                   <div className="text-sm text-red-400 text-center py-4 bg-red-50 rounded-lg border border-red-100">
+                     {voiceError}
+                   </div>
+                ) : customVoices.length > 0 ? (
+                  <div className="space-y-3">
+                    {customVoices.map(voice => {
+                      const isSelected = currentVoice.id === voice.id;
+                      const displayName = nicknames[voice.id] || voice.name;
+                      const isEditing = editingId === voice.id;
+
+                      return (
+                        <div 
+                           key={voice.id}
+                           onClick={() => !isEditing && onSelectVoice({ ...voice, name: displayName })}
+                           className={`relative group rounded-xl border transition-all duration-200 overflow-hidden ${
+                             isSelected 
+                               ? 'border-purple-500 bg-purple-50/50 shadow-sm ring-1 ring-purple-200' 
+                               : 'border-gray-200 hover:border-purple-200 bg-white hover:shadow-sm'
+                           }`}
+                        >
+                            <div className="p-4 pr-10"> {/* Right padding to prevent overlap with selection indicator */}
+                                {/* Header: Name and Actions */}
+                                <div className="flex justify-between items-start mb-2">
+                                    <div className="flex-1">
+                                        {isEditing ? (
+                                            <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                                                <input 
+                                                    autoFocus
+                                                    className="w-full text-sm font-bold border-b border-purple-300 focus:outline-none bg-transparent py-0.5"
+                                                    value={editNameValue}
+                                                    onChange={e => setEditNameValue(e.target.value)}
+                                                    onBlur={() => handleSaveNickname(voice.id)} // Auto-save on blur
+                                                    onKeyDown={e => {
+                                                        if(e.key === 'Enter') {
+                                                            e.currentTarget.blur();
+                                                        }
+                                                        if(e.key === 'Escape') {
+                                                            // Optional: Cancel changes
+                                                            setEditingId(null);
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2">
+                                                <span className={`font-bold text-sm truncate ${isSelected ? 'text-purple-900' : 'text-gray-700'}`}>
+                                                    {displayName}
+                                                </span>
+                                                {/* Edit Icon */}
+                                                <button 
+                                                    onClick={(e) => handleStartEdit(e, voice)}
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-purple-600"
+                                                    title="Rename Locally"
+                                                >
+                                                    <Edit3 className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Status / Selected Indicator (Absolute positioned) */}
+                                    {isSelected && <div className="absolute top-4 right-4 pointer-events-none"><CheckCircle className="w-5 h-5 text-purple-600" /></div>}
+                                </div>
+
+                                {/* ID */}
+                                <div className="flex items-center gap-1.5 mb-2 group/id cursor-pointer" onClick={(e) => handleCopyId(e, voice.id)}>
+                                    <code className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded font-mono truncate max-w-[200px]" title={voice.id}>
+                                        {voice.id}
+                                    </code>
+                                </div>
+
+                                {/* Reference Text */}
+                                {voice.referenceText && (
+                                    <div className="flex gap-2 bg-white/60 p-2 rounded-lg border border-gray-100/50">
+                                        <Quote className="w-3 h-3 text-gray-300 shrink-0 mt-0.5" />
+                                        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+                                            {voice.referenceText}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Actions Footer - Always visible and distinct */}
+                            <div className="flex border-t border-gray-100 bg-gray-50/50">
+                                <button 
+                                    onClick={(e) => handleDelete(e, voice.id)}
+                                    className="flex-1 py-3 text-xs font-medium text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    {deletingId === voice.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                                    {deletingId === voice.id ? '删除中...' : '删除音色'}
+                                </button>
+                            </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-400 text-center py-4 bg-gray-50 rounded-lg border border-dashed border-gray-200 flex flex-col gap-2">
+                    <span>暂无自定义音色</span>
+                    {!apiKey && (
+                        <span className="text-xs text-purple-500">
+                            (请在设置菜单中配置有效的 API Key 以加载音色)
+                        </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {activeTab === 'model' && (
             <div className="space-y-2">
               {TTS_MODELS.map((model) => (
@@ -132,53 +347,6 @@ export const ModelVoiceSelector: React.FC<ModelVoiceSelectorProps> = ({
                   {currentModel === model.id && <Check className="w-5 h-5 text-purple-600" />}
                 </button>
               ))}
-            </div>
-          )}
-
-          {activeTab === 'voice' && (
-            <div className="space-y-6">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">我的音色 (API获取)</h4>
-                  <button onClick={loadCustomVoices} disabled={isLoadingVoices}>
-                    <RefreshCw className={`w-3.5 h-3.5 text-gray-400 ${isLoadingVoices ? 'animate-spin' : ''}`} />
-                  </button>
-                </div>
-                
-                {isLoadingVoices && customVoices.length === 0 ? (
-                  <div className="text-sm text-gray-400 text-center py-4">加载中...</div>
-                ) : voiceError ? (
-                   <div className="text-sm text-red-400 text-center py-4 bg-red-50 rounded-lg border border-red-100">
-                     {voiceError}
-                   </div>
-                ) : customVoices.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {customVoices.map(voice => (
-                      <button
-                        key={voice.id}
-                        onClick={() => onSelectVoice(voice)}
-                        className={`p-3 rounded-xl border text-left transition-all ${
-                          currentVoice.id === voice.id 
-                            ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500' 
-                            : 'border-gray-200 hover:border-purple-200 bg-white'
-                        }`}
-                      >
-                         <div className="font-medium text-gray-800 truncate">{voice.name}</div>
-                         <div className="text-[10px] text-gray-400 mt-1 truncate max-w-full opacity-60">{voice.id}</div>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-sm text-gray-400 text-center py-4 bg-gray-50 rounded-lg border border-dashed border-gray-200 flex flex-col gap-2">
-                    <span>暂无自定义音色</span>
-                    {!apiKey && (
-                        <span className="text-xs text-purple-500">
-                            (请在设置菜单中配置有效的 API Key 以加载音色)
-                        </span>
-                    )}
-                  </div>
-                )}
-              </div>
             </div>
           )}
         </div>

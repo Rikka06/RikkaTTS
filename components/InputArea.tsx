@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Loader2, Zap } from 'lucide-react';
+import { Send, Loader2, Zap, Sparkles, BookOpen } from 'lucide-react';
 import { calculateCost, formatCost, getByteLength } from '../utils/audioUtils';
 
 interface InputAreaProps {
@@ -7,6 +7,22 @@ interface InputAreaProps {
   onStop: () => void;
   isLoading: boolean;
 }
+
+const CHUNIBYO_QUOTES = [
+    "爆裂吧，现实！粉碎吧，精神！放逐这个世界！",
+    "被漆黑烈焰吞噬殆尽吧！(Dark Flame Master!)",
+    "错的不是我，是这个世界。",
+    "以我之名，召唤古老的盟约，降临于此吧！",
+    "沉睡在体内的黑龙啊，觉醒的时刻到了！",
+    "这也是命运石之门的选择吗？El Psy Kongroo.",
+    "邪王真眼是最强的！",
+    "区区人类，竟敢直视神的威光？",
+    "吾乃侍奉无上至尊之人，在此宣告汝之终焉。",
+    "此时此刻，正是审判之时！",
+    "不可视境界线正在发生变动...",
+    "封印解除！Vanishment This World!",
+    "我的右手...开始灼烧了..."
+];
 
 export const InputArea: React.FC<InputAreaProps> = ({ onGenerate, onStop, isLoading }) => {
   const [text, setText] = useState('');
@@ -22,24 +38,15 @@ export const InputArea: React.FC<InputAreaProps> = ({ onGenerate, onStop, isLoad
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (isLoading) {
-      onStop();
-      return;
-    }
     if (text.trim()) {
       onGenerate(text);
-      // We don't clear text immediately in case of error/retry, 
-      // but usually for TTS it's better to clear. 
-      // Let's keep it cleared on success in App.tsx ideally, but here is fine for now.
       setText('');
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
+  const handleRandomQuote = () => {
+      const random = CHUNIBYO_QUOTES[Math.floor(Math.random() * CHUNIBYO_QUOTES.length)];
+      setText(random);
   };
 
   return (
@@ -53,9 +60,8 @@ export const InputArea: React.FC<InputAreaProps> = ({ onGenerate, onStop, isLoad
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="在此输入咏唱咒语 (文字)..."
-            disabled={isLoading}
+            // Removed onKeyDown listener to allow Enter for new lines
+            placeholder="在此输入咏唱咒语 (文字)... (按回车换行)"
             className="w-full h-24 pl-5 pr-14 py-4 bg-transparent border-none focus:ring-0 outline-none resize-none text-gray-700 placeholder-gray-400/70 text-base font-medium disabled:opacity-50"
           />
           
@@ -71,29 +77,38 @@ export const InputArea: React.FC<InputAreaProps> = ({ onGenerate, onStop, isLoad
                 </div>
              </div>
 
-             <button
-              onClick={() => handleSubmit()}
-              disabled={!text.trim() && !isLoading}
-              className={`flex items-center justify-center gap-2 px-4 py-1.5 rounded-lg font-medium transition-all duration-300 ${
-                isLoading 
-                  ? 'bg-red-500 text-white shadow-md shadow-red-200 hover:bg-red-600 hover:scale-105 active:scale-95'
-                  : text.trim()
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-200 hover:shadow-lg hover:scale-105 active:scale-95' 
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>停止 (Stop)</span>
-                </>
-              ) : (
-                <>
-                  <span>生成</span>
-                  <Send className="w-3.5 h-3.5" />
-                </>
-              )}
-            </button>
+             <div className="flex items-center gap-2">
+                 {/* Grimoire Button */}
+                <button
+                    onClick={handleRandomQuote}
+                    className="p-2 text-purple-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                    title="真理之书 (Random Quote)"
+                >
+                    <BookOpen className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={() => handleSubmit()}
+                  disabled={!text.trim()}
+                  className={`flex items-center justify-center gap-2 px-4 py-1.5 rounded-lg font-medium transition-all duration-300 ${
+                    text.trim()
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-200 hover:shadow-lg hover:scale-105 active:scale-95' 
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  {isLoading ? (
+                    <>
+                      <span>生成中</span>
+                      <Send className="w-3.5 h-3.5" />
+                    </>
+                  ) : (
+                    <>
+                      <span>生成</span>
+                      <Send className="w-3.5 h-3.5" />
+                    </>
+                  )}
+                </button>
+             </div>
           </div>
         </div>
       </div>

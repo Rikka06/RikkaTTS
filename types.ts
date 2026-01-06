@@ -5,6 +5,9 @@ export interface AudioMessage {
   audioUrl: string; // Blob URL
   createdAt: number;
   cost?: number; // Cost in CNY
+  generationTime?: number; // Generation duration in ms
+  status?: 'pending' | 'success' | 'error';
+  errorMessage?: string;
 }
 
 export const TTS_MODELS = [
@@ -19,6 +22,7 @@ export interface Voice {
   id: string; // 'alex' or 'speech:...'
   name: string;
   type: 'system' | 'custom';
+  referenceText?: string; // Optional reference text for custom voices
 }
 
 // System voices as a fallback/baseline

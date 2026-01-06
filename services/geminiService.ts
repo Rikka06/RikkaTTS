@@ -71,6 +71,7 @@ export const fetchCustomVoices = async (apiKey?: string): Promise<Voice[]> => {
       id: id,
       name: item.customName || item.name || 'Unknown Voice',
       type: 'custom' as const,
+      referenceText: item.text || item.referenceText || '' // Extract reference text
     };
   }).filter((v: Voice) => v.id); // Filter out items without ID
 };
@@ -138,6 +139,7 @@ export const uploadCustomVoice = async (
     id: data.uri || data.id, // Fallback
     name: customName,
     type: 'custom',
+    referenceText: text
   };
 };
 
@@ -176,8 +178,6 @@ export const deleteCustomVoice = async (uri: string, apiKey?: string): Promise<s
 
 export const generateSpeech = async (text: string, model: TTSModelId, voice: Voice, apiKey?: string): Promise<string> => {
   if (!text || !text.trim()) throw new Error("Text is required");
-
-  // Removed incompatibility check for IndexTTS + Custom Voice based on user feedback.
   
   const body: any = {
     model: model,
@@ -185,22 +185,13 @@ export const generateSpeech = async (text: string, model: TTSModelId, voice: Voi
     response_format: 'mp3',
     stream: false 
   };
-
-  // Logic matched to reference implementation:
-  // 1. If voice is custom, use the ID directly.
-  // 2. If voice is system (preset), use "model:voice" format, unless it's default/empty.
   
   if (voice.type === 'custom') {
       if (voice.id) {
           body.voice = voice.id;
       }
   } else {
-      // System voices
-      // In the reference code: if (voice !== 'default') requestData.voice = `${model}:${voice}`;
-      // Our voice.id for system voices is like 'alex', 'anna', etc.
-      // We assume 'default' maps to an empty voice param or specific logic, but here we treat known system voices as non-default.
       if (voice.id && voice.id !== 'default') {
-          // Applies to CosyVoice, IndexTTS (if supported), Moss, etc.
           body.voice = `${model}:${voice.id}`;
       }
   }
@@ -226,7 +217,6 @@ export const generateSpeech = async (text: string, model: TTSModelId, voice: Voi
 
   } catch (error) {
     console.error("Error generating speech:", error);
-    // Enhance error message for the user if it's the known 50507 code
     if (error instanceof Error && error.message.includes('50507')) {
        throw new Error(`Generation failed (50507): The selected voice '${voice.name}' (${voice.id}) appears incompatible with model '${model}'. Try checking if this voice is supported by the model.`);
     }
