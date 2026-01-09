@@ -380,7 +380,8 @@ const App: React.FC = () => {
   const selectedModelName = TTS_MODELS.find(m => m.id === selectedModel)?.name || selectedModel;
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-[#F5F7FA] via-[#F3F0FF] to-[#E6E6FA] font-sans relative overflow-hidden">
+    // Changed h-full to h-[100dvh] to better handle mobile browsers
+    <div className="flex flex-col h-[100dvh] bg-gradient-to-br from-[#F5F7FA] via-[#F3F0FF] to-[#E6E6FA] font-sans relative overflow-hidden">
       
       {/* Background Ambience */}
       <div className="fixed top-0 left-0 w-full h-96 bg-gradient-to-b from-purple-100/50 to-transparent pointer-events-none z-0"></div>

@@ -40,8 +40,8 @@ export const InputArea: React.FC<InputAreaProps> = ({ onGenerate, onStop, isLoad
     if (textareaRef.current) {
         textareaRef.current.style.height = 'auto'; // Reset height to recalculate shrinking
         const scrollHeight = textareaRef.current.scrollHeight;
-        // Min height 50px, Max height 160px
-        const newHeight = Math.min(Math.max(scrollHeight, 50), 160); 
+        // Min height 44px, Max height 160px
+        const newHeight = Math.min(Math.max(scrollHeight, 44), 160); 
         textareaRef.current.style.height = `${newHeight}px`;
     }
   }, [text]);
@@ -53,7 +53,7 @@ export const InputArea: React.FC<InputAreaProps> = ({ onGenerate, onStop, isLoad
       setText('');
       // Reset height immediately after send
       if (textareaRef.current) {
-          textareaRef.current.style.height = '50px';
+          textareaRef.current.style.height = '44px';
       }
     }
   };
@@ -78,10 +78,11 @@ export const InputArea: React.FC<InputAreaProps> = ({ onGenerate, onStop, isLoad
             // Removed onKeyDown listener to allow Enter for new lines
             placeholder="在此输入咏唱咒语 (文字)... (按回车换行)"
             rows={1}
-            className="w-full min-h-[50px] pl-5 pr-14 py-3 bg-transparent border-none focus:ring-0 outline-none resize-none text-gray-700 placeholder-gray-400/70 text-base font-medium disabled:opacity-50 overflow-y-auto"
+            // Reduced min-height and padding
+            className="w-full min-h-[44px] pl-4 pr-12 py-2.5 bg-transparent border-none focus:ring-0 outline-none resize-none text-gray-700 placeholder-gray-400/70 text-base font-medium disabled:opacity-50 overflow-y-auto"
           />
           
-          <div className="flex items-center justify-between px-4 pb-3 pt-1 border-t border-purple-50/50">
+          <div className="flex items-center justify-between px-4 pb-2 pt-1 border-t border-purple-50/50">
              {/* Billing Info */}
              <div className="flex items-center gap-3 text-xs">
                 <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors ${text ? 'bg-purple-50 text-purple-700' : 'bg-gray-50 text-gray-400'}`}>

@@ -19,7 +19,9 @@ export const Header: React.FC<HeaderProps> = ({
   selectedVoiceName
 }) => {
   return (
-    <header className="bg-[#7F56D9] text-white px-3 py-2 md:px-4 md:py-3 flex items-center justify-between shadow-md z-50 sticky top-0 shrink-0">
+    // Removed 'sticky top-0' to prevent scroll conflict with mobile keyboard/address bar. 
+    // Now relies on App.tsx flex-col layout.
+    <header className="bg-[#7F56D9] text-white px-3 py-2 md:px-4 md:py-3 flex items-center justify-between shadow-md z-50 shrink-0">
       {/* Left: Logo & Title */}
       <div className="flex items-center gap-2 min-w-0">
         <div className="w-7 h-7 bg-white rounded-md flex items-center justify-center shrink-0 shadow-sm">
